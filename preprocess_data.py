@@ -9,15 +9,23 @@ def split_dataset(filename):
     df['bmi'] = df['bmi'].fillna(df['bmi'].mean())
     df = df.drop('id', axis=1)
 
+    df_glucose = sorted(df['avg_glucose_level'])
+    Q1, Q3 = np.percentile(df_glucose, [25, 75])
+    IQR = Q3 - Q1
+    lower_range = Q1 - (3 * IQR)
+    upper_range = Q3 + (3 * IQR)
+
+    df = df.drop(df[df.avg_glucose_level > upper_range].index)
+
     df_bmi = sorted(df['bmi'])
     Q1, Q3 = np.percentile(df_bmi, [25, 75])
     IQR = Q3 - Q1
     lower_range = Q1 - (1.5 * IQR)
     upper_range = Q3 + (1.5 * IQR)
 
-    df1_without_outliers = df.drop(df[df.bmi > upper_range].index)
+    df = df.drop(df[df.bmi > upper_range].index)
 
-    df2 = df1_without_outliers.copy()
+    df2 = df.copy()
 
     df2['age'] = df2['age'].apply(lambda x: np.log(x + 10) * 3)
     df2['avg_glucose_level'] = df2['avg_glucose_level'].apply(lambda x: np.log(x + 10) * 2)
@@ -36,10 +44,11 @@ def split_dataset(filename):
 
     x_train_new, x_test_new, y_train_new, y_test_new = train_test_split(X_new, Y_new, test_size=0.2, random_state=42)
 
-    smt = SMOTE()
-    x_train_sampling_new, y_train_sampling_new = smt.fit_resample(x_train_new, y_train_new)
+    return x_train_new, x_test_new, y_train_new, y_test_new
 
-    return x_train_sampling_new, y_train_sampling_new, x_test_new, y_test_new
 
+if __name__ == '__main__':
+    res = split_dataset('./healthcare-dataset-stroke-data.csv')
+    print(1)
 
 

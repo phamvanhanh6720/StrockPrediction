@@ -139,13 +139,23 @@ class Trainer:
         for epoch in range(self.n_epoches):
             loss = self.train_one_epoch()
 
-        return self.evaluate()
+            train_res = self.evaluate(mod=1)
+            test_res = self.evaluate(mod=0)
+            print("Epoch {} AUC Training: {:.4f} AP Training {:.4f}".format(epoch+1, train_res[0], train_res[1]))
+            print("\t \t AUC Validating: {:.4f} AP Validating {:.4f}".format(test_res[0], test_res[1]))
 
-    def evaluate(self):
+        print("Training Done")
+
+    def evaluate(self, mod=0):
         self.model.eval()
         loss_train = 0
         y_label = list()
         y_pred = list()
+
+        if mod ==0:
+            dataloader = self.test_dataloader
+        else:
+            dataloader = self.train_dataloader
 
         for step, batch in enumerate(self.test_dataloader):
             batch_X, batch_y = batch
@@ -168,9 +178,10 @@ class Trainer:
 
 
 from preprocess_data import split_dataset
+
 if __name__ == '__main__':
-    x_train, y_train, x_test, y_test = split_dataset('healthcare-dataset-stroke-data.csv')
-    trainer = Trainer(x_train, y_train, x_test, y_test, n_epochs=10)
+    x_train, x_test, y_train, y_test = split_dataset('healthcare-dataset-stroke-data.csv')
+    trainer = Trainer(x_train, y_train, x_test, y_test, n_epochs=10, alpha=25)
+    trainer.train()
     result = trainer.evaluate()
     print(result)
-
